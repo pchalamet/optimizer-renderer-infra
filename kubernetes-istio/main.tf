@@ -17,15 +17,16 @@ provider "kubernetes" {
 resource "google_container_cluster" "gke_cluster" {
   provider = "google-beta"
   name = "${var.cluster_name}"
+
   zone = "${var.gcp_region}-a"
+  additional_zones = []
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default
-  # node pool and immediately delete it.  remove_default_node_pool = true
+  # node pool and immediately delete it.  
+  remove_default_node_pool = true
   initial_node_count = 1
   
-  additional_zones = []
-
   master_auth {
     username = "${var.master_username}"
     password = "${var.master_password}"
@@ -44,11 +45,12 @@ resource "google_container_cluster" "gke_cluster" {
 resource "google_container_node_pool" "gke_node_pool" {
   provider = "google-beta"
   name = "${var.cluster_name}-pool"
+  cluster = "${google_container_cluster.gke_cluster.name}"
+
   # region = "${var.gcp_region}"
   zone = "${var.gcp_region}-a"
-  cluster = "${google_container_cluster.gke_cluster.name}"
-  node_count = "${var.min_node_count}"
 
+  node_count = "${var.min_node_count}"
   autoscaling {
     min_node_count = "${var.min_node_count}"
     max_node_count = "${var.max_node_count}"
